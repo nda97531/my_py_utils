@@ -54,6 +54,7 @@ def shifting_window(data: np.ndarray, window_size: int, max_num_windows: int, mi
     Returns:
         array shape [num window, window size, ...]
     """
+    # end index inclusive -> exclusive
     end_idx = end_idx + 1
 
     # exception 1: data array is too small compared to window size
