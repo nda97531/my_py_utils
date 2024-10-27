@@ -127,7 +127,8 @@ def interval_intersection(intervals: List[List[List[int]]]) -> List[List[int]]:
     return result
 
 
-def create_random_unique_subsets(arr, max_num_subsets: int, max_retries: int = 10, seed: int = None):
+def create_random_unique_subsets(arr: Union[int, Iterable], max_num_subsets: int, max_retries: int = 10,
+                                 seed: int = None):
     """
     Create random subsets from an array.
     All subsets are different from each other.
