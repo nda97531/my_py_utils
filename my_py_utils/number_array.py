@@ -1,4 +1,5 @@
-from typing import List
+from collections.abc import Iterable
+from typing import List, Union
 import bezier
 import numpy as np
 from scipy.interpolate import CubicSpline
@@ -126,30 +127,67 @@ def interval_intersection(intervals: List[List[List[int]]]) -> List[List[int]]:
     return result
 
 
-if __name__ == '__main__':
-    import matplotlib.pyplot as plt
+def create_random_unique_subsets(arr: Union[int, Iterable], max_num_subsets: int, max_retries: int = 10):
+    """
+    Create random subsets from an array.
+    All subsets are different from each other.
+    Each subset has a random length from 1 to (N-1), so it's never the whole input array.
+    What array elements have been picked will have less probability of being picked in the next subset. (all elements
+    will be picked with roughly equal probability.)
 
-    _ = np.asfortranarray([
-        [0.0, 1.0],
-        [0.0, 2.0],
-        [0.0, 3.0],
-    ])
+    Args:
+        arr: the list to select subsets from. If this is an int, the list will be list(range(n))
+        max_num_subsets: number of subsets to create; return fewer subsets if cannot find enough unique subsets
+        max_retries: maximum number of retries when encountering duplicate subsets
 
-    randomizer = np.random.default_rng(seed=2)
-    cubic_curves = gen_random_curves(length=100, num_curves=2, sigma=0.2, knot=2, method='cubic', randomizer=randomizer)
+    Returns:
+        a 2-level list, each child list is a subset
+    """
+    if isinstance(arr, Iterable):
+        arr = np.array(arr)
+        n = len(arr)
+    elif isinstance(arr, int):
+        n = arr
+    else:
+        raise ValueError(f'invalid input type for `arr`: {type(arr)}')
 
-    randomizer = np.random.default_rng(seed=2)
-    bezier_curves = gen_random_curves(length=100, num_curves=2, sigma=0.2, knot=2, method='bezier',
-                                      randomizer=randomizer)
+    # ensure there is at least one unit to pick from
+    assert n >= 1, 'input list is empty.'
 
-    plt.subplot(1, 2, 1)
-    plt.plot(cubic_curves[:, 0], label='cubic')
-    plt.plot(bezier_curves[:, 0], label='bezier')
-    plt.legend()
+    # initialise the number of elements to pick for each subset
+    len_subsets = np.random.randint(low=1, high=n, size=max_num_subsets)
 
-    plt.subplot(1, 2, 2)
-    plt.plot(cubic_curves[:, 1], label='cubic')
-    plt.plot(bezier_curves[:, 1], label='bezier')
-    plt.legend()
+    # initialise the probabilities for each unit
+    p_units = np.ones(n, dtype=float)
+    all_results = set()
 
-    plt.show()
+    i = 0
+    j = 0
+    # for each subset
+    while (i < len(len_subsets)) and (j < len(len_subsets) + max_retries):
+        # normalise the probabilities, avoiding division by zero
+        total_p_units = p_units.sum()
+        if total_p_units == 0:
+            p_units = np.ones(n, dtype=float) / n
+        else:
+            p_units /= total_p_units
+
+        # select random elements based on the current probabilities
+        step_result = np.random.choice(n, size=len_subsets[i], replace=False, p=p_units)
+        step_result = tuple(np.sort(step_result))
+
+        # if result is unique, add it to all_results
+        if step_result not in all_results:
+            all_results.add(step_result)
+            i += 1
+
+            # update unit probabilities
+            p_units[list(step_result)] /= 2
+        j += 1
+
+    all_results = [list(v) for v in all_results]
+
+    if isinstance(arr, np.ndarray):
+        all_results = [arr[v].tolist() for v in all_results]
+
+    return all_results
