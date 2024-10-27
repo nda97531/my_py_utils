@@ -127,7 +127,7 @@ def interval_intersection(intervals: List[List[List[int]]]) -> List[List[int]]:
     return result
 
 
-def create_random_unique_subsets(arr: Union[int, Iterable], max_num_subsets: int, max_retries: int = 10):
+def create_random_unique_subsets(arr, max_num_subsets: int, max_retries: int = 10, seed: int = None):
     """
     Create random subsets from an array.
     All subsets are different from each other.
@@ -139,6 +139,7 @@ def create_random_unique_subsets(arr: Union[int, Iterable], max_num_subsets: int
         arr: the list to select subsets from. If this is an int, the list will be list(range(n))
         max_num_subsets: number of subsets to create; return fewer subsets if cannot find enough unique subsets
         max_retries: maximum number of retries when encountering duplicate subsets
+        seed: random seed
 
     Returns:
         a 2-level list, each child list is a subset
@@ -155,7 +156,8 @@ def create_random_unique_subsets(arr: Union[int, Iterable], max_num_subsets: int
     assert n >= 1, 'input list is empty.'
 
     # initialise the number of elements to pick for each subset
-    len_subsets = np.random.randint(low=1, high=n, size=max_num_subsets)
+    rand_generator = np.random.default_rng(seed)
+    len_subsets = rand_generator.integers(low=1, high=n, size=max_num_subsets)
 
     # initialise the probabilities for each unit
     p_units = np.ones(n, dtype=float)
@@ -173,7 +175,7 @@ def create_random_unique_subsets(arr: Union[int, Iterable], max_num_subsets: int
             p_units /= total_p_units
 
         # select random elements based on the current probabilities
-        step_result = np.random.choice(n, size=len_subsets[i], replace=False, p=p_units)
+        step_result = rand_generator.choice(n, size=len_subsets[i], replace=False, p=p_units, shuffle=False)
         step_result = tuple(np.sort(step_result))
 
         # if result is unique, add it to all_results
