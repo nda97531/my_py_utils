@@ -127,11 +127,10 @@ def interval_intersection(intervals: List[List[List[int]]]) -> List[List[int]]:
     return result
 
 
-def create_random_unique_subsets(arr: Union[int, Iterable], max_num_subsets: int, max_retries: int = 10,
-                                 seed: int = None):
+def create_random_subsets(arr: Union[int, Iterable], max_num_subsets: int, max_retries: int = 10,
+                          replace: bool = False, seed: int = None):
     """
     Create random subsets from an array.
-    All subsets are different from each other.
     Each subset has a random length from 1 to (N-1), so it's never the whole input array.
     What array elements have been picked will have less probability of being picked in the next subset. (all elements
     will be picked with roughly equal probability.)
@@ -140,6 +139,7 @@ def create_random_unique_subsets(arr: Union[int, Iterable], max_num_subsets: int
         arr: the list to select subsets from. If this is an int, the list will be list(range(n))
         max_num_subsets: number of subsets to create; return fewer subsets if cannot find enough unique subsets
         max_retries: maximum number of retries when encountering duplicate subsets
+        replace: whether to allow duplicate subsets in the result
         seed: random seed
 
     Returns:
@@ -180,7 +180,7 @@ def create_random_unique_subsets(arr: Union[int, Iterable], max_num_subsets: int
         step_result = tuple(np.sort(step_result))
 
         # if result is unique, add it to all_results
-        if step_result not in all_results:
+        if (step_result not in all_results) or replace:
             all_results.add(step_result)
             i += 1
 
