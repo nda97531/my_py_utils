@@ -1,3 +1,4 @@
+from collections import defaultdict
 from collections.abc import Iterable
 from typing import List, Union
 import bezier
@@ -162,7 +163,7 @@ def create_random_subsets(arr: Union[int, Iterable], max_num_subsets: int, max_r
 
     # initialise the probabilities for each unit
     p_units = np.ones(n, dtype=float)
-    all_results = set()
+    results_dict = defaultdict(int)  # key: subset as tuple; value: num appearances
 
     i = 0
     j = 0
@@ -180,17 +181,20 @@ def create_random_subsets(arr: Union[int, Iterable], max_num_subsets: int, max_r
         step_result = tuple(np.sort(step_result))
 
         # if result is unique, add it to all_results
-        if (step_result not in all_results) or replace:
-            all_results.add(step_result)
+        if (step_result not in results_dict) or replace:
+            results_dict[step_result] += 1
             i += 1
 
             # update unit probabilities
             p_units[list(step_result)] /= 2
         j += 1
 
-    all_results = [list(v) for v in all_results]
+    # convert output format
+    results_list = []
+    for subset, repeat in results_dict.items():
+        results_list += [list(subset)] * repeat
 
     if isinstance(arr, np.ndarray):
-        all_results = [arr[v].tolist() for v in all_results]
+        results_list = [arr[v].tolist() for v in results_list]
 
-    return all_results
+    return results_list
