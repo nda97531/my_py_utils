@@ -14,21 +14,22 @@ def rreplace(s: str, old: str, new: str, occurrence: int = 1):
     return new.join(li)
 
 
-def format_dict_of_floats(data_dict: dict, decimal_points: int = 4, except_keys: set = None):
+def format_dict_of_floats(data_dict: dict, decimal_points: int = 4, scientific_keys: set = None):
     """
     Format a dictionary into a string with specified decimal points for float values.
+    Keys in scientific_keys will be formatted in scientific notation.
 
     Args:
         data_dict (dict): Dictionary with string keys and float values.
         decimal_points (int): Number of decimal points to display for float values.
-        except_keys (set): Set of keys that should be in Python default format.
+        scientific_keys (list): List of keys that should be formatted in scientific notation.
     """
-    except_keys = except_keys or {}  # Default to empty list if None
+    scientific_keys = scientific_keys or []  # Default to empty list if None
 
     formatted_items = []
     for key, value in data_dict.items():
-        if key in except_keys:
-            formatted_items.append(f'{key}: {value}')
+        if key in scientific_keys:
+            formatted_items.append(f'{key}: {value:.{decimal_points}e}')
         else:
             formatted_items.append(f'{key}: {value:.{decimal_points}f}')
     return ", ".join(formatted_items)
