@@ -129,7 +129,8 @@ def interval_intersection(intervals: List[List[List[int]]]) -> List[List[int]]:
 
 
 def create_random_subsets(arr: Union[int, Iterable], max_num_subsets: int, max_retries: int = 10,
-                          subset_length_mode: Union[str, int] = 'multi', replace: bool = False, seed: int = None):
+                          subset_length_mode: Union[str, int] = 'multi', max_subset_length: int = None,
+                          replace: bool = False, seed: int = None):
     """
     Create random subsets from an array.
     Each subset has a random length from 1 to (N-1), so it's never the whole input array.
@@ -144,6 +145,7 @@ def create_random_subsets(arr: Union[int, Iterable], max_num_subsets: int, max_r
             an integer: a given length for all subsets
             'multi': randomly generate a length for each subset
             'single': randomly generate the same length for all subsets
+        max_subset_length: maximum length of a subset
         replace: whether to allow duplicate subsets in the result
         seed: random seed
 
@@ -164,10 +166,16 @@ def create_random_subsets(arr: Union[int, Iterable], max_num_subsets: int, max_r
     rand_generator = np.random.default_rng(seed)
 
     # initialise the number of elements to pick for each subset
+    if max_subset_length is None:
+        max_subset_length = n
+    else:
+        assert 1 <= max_subset_length < n, f'1 <= `max_subset_length` < len(`arr`); but found {max_subset_length}'
+        max_subset_length = max_subset_length + 1
+
     if subset_length_mode == 'multi':
-        len_subsets = rand_generator.integers(low=1, high=n, size=max_num_subsets)
+        len_subsets = rand_generator.integers(low=1, high=max_subset_length, size=max_num_subsets)
     elif subset_length_mode == 'single':
-        len_subsets = [rand_generator.integers(low=1, high=n)] * max_num_subsets
+        len_subsets = [rand_generator.integers(low=1, high=max_subset_length)] * max_num_subsets
     elif isinstance(subset_length_mode, int):
         assert 1 <= subset_length_mode < n, f'1 <= `subset_length_mode` < len(`arr`); but found {subset_length_mode}'
         len_subsets = [subset_length_mode] * max_num_subsets
