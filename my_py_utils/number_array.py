@@ -130,12 +130,12 @@ def interval_intersection(intervals: List[List[List[int]]]) -> List[List[int]]:
 
 def create_random_subsets(arr: Union[int, Iterable], max_num_subsets: int, max_retries: int = 10,
                           subset_length_mode: Union[str, int] = 'multi', max_subset_length: int = None,
-                          replace: bool = False, seed: int = None):
+                          replace: bool = False, seed: int = None, probs: list = None):
     """
     Create random subsets from an array.
     Each subset has a random length from 1 to (N-1), so it's never the whole input array.
-    What array elements have been picked will have less probability of being picked in the next subset. (all elements
-    will be picked with roughly equal probability.)
+    What array elements have been picked will have less probability of being picked in the next subset (all elements
+    will be picked with roughly equal probability.), unless "probs" is specified.
 
     Args:
         arr: the list to select subsets from. If this is an int, the list will be list(range(n))
@@ -148,6 +148,7 @@ def create_random_subsets(arr: Union[int, Iterable], max_num_subsets: int, max_r
         max_subset_length: maximum length of a subset
         replace: whether to allow duplicate subsets in the result
         seed: random seed
+        probs: fixed probabilities for items in array to be picked in all subsets
 
     Returns:
         a 2-level list, each child list is a subset
@@ -183,19 +184,24 @@ def create_random_subsets(arr: Union[int, Iterable], max_num_subsets: int, max_r
         raise ValueError(f'invalid input type for `subset_length_mode`: {subset_length_mode}')
 
     # initialise the probabilities for each unit
-    p_units = np.ones(n, dtype=float)
+    if probs is None:
+        p_units = np.ones(n, dtype=float)
+    else:
+        p_units = np.array(probs)
+        p_units = p_units / p_units.sum()
     results_dict = defaultdict(int)  # key: subset as tuple; value: num appearances
 
     i = 0
     j = 0
     # for each subset
     while (i < len(len_subsets)) and (j < len(len_subsets) + max_retries):
-        # normalise the probabilities, avoiding division by zero
-        total_p_units = p_units.sum()
-        if total_p_units == 0:
-            p_units = np.ones(n, dtype=float) / n
-        else:
-            p_units /= total_p_units
+        if probs is None:
+            # normalise the probabilities, avoiding division by zero
+            total_p_units = p_units.sum()
+            if total_p_units == 0:
+                p_units = np.ones(n, dtype=float) / n
+            else:
+                p_units /= total_p_units
 
         # select random elements based on the current probabilities
         step_result = rand_generator.choice(n, size=len_subsets[i], replace=False, p=p_units, shuffle=False)
@@ -207,7 +213,8 @@ def create_random_subsets(arr: Union[int, Iterable], max_num_subsets: int, max_r
             i += 1
 
             # update unit probabilities
-            p_units[list(step_result)] /= 2
+            if probs is None:
+                p_units[list(step_result)] /= 2
         j += 1
 
     # convert output format
