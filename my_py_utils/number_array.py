@@ -146,7 +146,8 @@ def create_random_subsets(arr: Union[int, Iterable], max_num_subsets: int, max_r
             'multi': randomly generate a length for each subset
             'single': randomly generate the same length for all subsets
         max_subset_length: maximum length of a subset
-        replace: whether to allow duplicate subsets in the result
+        replace: whether to allow duplicate subsets in the result;
+            this guarantees the function always returns ``max_num_subsets`` subsets
         seed: random seed
         probs: fixed probabilities for items in array to be picked in all subsets
 
@@ -210,7 +211,7 @@ def create_random_subsets(arr: Union[int, Iterable], max_num_subsets: int, max_r
         step_result = tuple(np.sort(step_result))
 
         # if result is unique, add it to all_results
-        if (step_result not in results_dict) or replace:
+        if step_result not in results_dict:
             results_dict[step_result] += 1
             i += 1
 
@@ -226,5 +227,9 @@ def create_random_subsets(arr: Union[int, Iterable], max_num_subsets: int, max_r
 
     if isinstance(arr, np.ndarray):
         results_list = [arr[v].tolist() for v in results_list]
+
+    # return duplicates if needed and `replace=True`
+    if (len(results_list) < max_num_subsets) and replace:
+        results_list += results_list[len(results_list) - max_num_subsets:].copy()
 
     return results_list
