@@ -187,6 +187,8 @@ def create_random_subsets(arr: Union[int, Iterable], max_num_subsets: int, max_r
     if probs is None:
         p_units = np.ones(n, dtype=float)
     else:
+        assert len(probs) == len(arr), \
+            f'probs must have same length as input "arr", but found {len(probs)} and {len(arr)}'
         p_units = np.array(probs)
         p_units = p_units / p_units.sum()
     results_dict = defaultdict(int)  # key: subset as tuple; value: num appearances
