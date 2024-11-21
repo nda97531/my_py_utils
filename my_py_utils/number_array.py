@@ -129,7 +129,7 @@ def interval_intersection(intervals: List[List[List[int]]]) -> List[List[int]]:
 
 
 def create_random_subsets(arr: Union[int, Iterable], max_num_subsets: int, max_retries: int = 10,
-                          subset_length_mode: Union[str, int] = 'multi', max_subset_length: int = None,
+                          subset_length_mode: Union[str, int, Iterable] = 'multi', max_subset_length: int = None,
                           replace: bool = False, seed: int = None, probs: list = None):
     """
     Create random subsets from an array.
@@ -143,6 +143,7 @@ def create_random_subsets(arr: Union[int, Iterable], max_num_subsets: int, max_r
         max_retries: maximum number of retries when encountering duplicate subsets
         subset_length_mode: accepted values are
             an integer: a given length for all subsets
+            an iterable: a list containing a given length for each subset
             'multi': randomly generate a length for each subset
             'single': randomly generate the same length for all subsets
         max_subset_length: maximum length of a subset
@@ -174,13 +175,26 @@ def create_random_subsets(arr: Union[int, Iterable], max_num_subsets: int, max_r
         assert 1 <= max_subset_length < n, f'1 <= `max_subset_length` < len(`arr`); but found {max_subset_length}'
         max_subset_length = max_subset_length + 1
 
-    if subset_length_mode == 'multi':
-        len_subsets = rand_generator.integers(low=1, high=max_subset_length, size=max_num_subsets)
-    elif subset_length_mode == 'single':
-        len_subsets = [rand_generator.integers(low=1, high=max_subset_length)] * max_num_subsets
+    if isinstance(subset_length_mode, str):
+        if subset_length_mode == 'multi':
+            len_subsets = rand_generator.integers(low=1, high=max_subset_length, size=max_num_subsets)
+        elif subset_length_mode == 'single':
+            len_subsets = [rand_generator.integers(low=1, high=max_subset_length)] * max_num_subsets
+        else:
+            raise ValueError(f'invalid input type for `subset_length_mode`: {subset_length_mode}')
+
+    elif isinstance(subset_length_mode, Iterable):
+        assert len(subset_length_mode) == max_num_subsets, \
+            f'subset_length_mode, if an Iterable, must have a length being equal to max_num_subsets'
+        for length in subset_length_mode:
+            assert 1 <= length < n, \
+                f'Each length in subset_length_mode must be 1 <= length < len(`arr`); but found {length}'
+        len_subsets = list(subset_length_mode)
+
     elif isinstance(subset_length_mode, int):
         assert 1 <= subset_length_mode < n, f'1 <= `subset_length_mode` < len(`arr`); but found {subset_length_mode}'
         len_subsets = [subset_length_mode] * max_num_subsets
+
     else:
         raise ValueError(f'invalid input type for `subset_length_mode`: {subset_length_mode}')
 
@@ -188,7 +202,7 @@ def create_random_subsets(arr: Union[int, Iterable], max_num_subsets: int, max_r
     if probs is None:
         p_units = np.ones(n, dtype=float)
     else:
-        assert len(probs) == len(arr), \
+        assert len(probs) == n, \
             f'probs must have same length as input "arr", but found {len(probs)} and {len(arr)}'
         p_units = np.array(probs)
         p_units = p_units / p_units.sum()
