@@ -225,7 +225,7 @@ def create_random_subsets(arr: Union[int, Iterable], max_num_subsets: int, max_r
         step_result = tuple(np.sort(step_result))
 
         # if result is unique, add it to all_results
-        if step_result not in results_dict:
+        if (step_result not in results_dict) or replace:
             results_dict[step_result] += 1
             i += 1
 
@@ -241,9 +241,5 @@ def create_random_subsets(arr: Union[int, Iterable], max_num_subsets: int, max_r
 
     if isinstance(arr, np.ndarray):
         results_list = [arr[v].tolist() for v in results_list]
-
-    # return duplicates if needed and `replace=True`
-    if (len(results_list) < max_num_subsets) and replace:
-        results_list += results_list[len(results_list) - max_num_subsets:].copy()
 
     return results_list
