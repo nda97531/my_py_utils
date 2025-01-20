@@ -67,22 +67,24 @@ def timestamp_2_str(timestamp: int, tz: int, str_format: str = '%Y/%m/%d %H:%M:%
 
 
 class TimeThis:
-    def __init__(self, op_name: str = 'operation', printer=print, **kwargs):
+    def __init__(self,
+                 timer=time.time,
+                 printer=lambda x: print(f'Elapsed time: {x}'),
+                 **kwargs):
         """
         Measure running time of a block of code
 
         Args:
-            op_name: just some text to print
-            printer: print function
+            timer: function returning current time
+            printer: print function; this class calls printer(duration, **kwargs) upon exit
             **kwargs: keyword args for the print function
         """
-        self.op_name = op_name
+        self.timer = timer
         self.printer = printer
         self.printer_kwargs = kwargs
 
     def __enter__(self):
-        self.start_time = time.time()
+        self.start_time = self.timer()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        duration = time.time() - self.start_time
-        self.printer(f'Elapsed time for {self.op_name}: {duration}(s)', **self.printer_kwargs)
+        self.printer(self.timer() - self.start_time, **self.printer_kwargs)
