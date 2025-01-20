@@ -84,4 +84,5 @@ class TimeThis:
         self.start_time = time.time()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.printer(f'Elapsed time for {self.op_name}: {time.time() - self.start_time}(s)', **self.printer_kwargs)
+        duration = time.time() - self.start_time
+        self.printer(f'Elapsed time for {self.op_name}: {duration}(s)', **self.printer_kwargs)
