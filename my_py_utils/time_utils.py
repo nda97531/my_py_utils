@@ -68,7 +68,7 @@ def timestamp_2_str(timestamp: int, tz: int, str_format: str = '%Y/%m/%d %H:%M:%
 
 class TimeThis:
     def __init__(self,
-                 timer=time.time,
+                 timer=time.time_ns,
                  printer=lambda x: print(f'Elapsed time: {x}'),
                  **kwargs):
         """
