@@ -1,6 +1,24 @@
 import numpy as np
 
 
+def cal_num_windows(len_data: int, window_size: int, step_size: int, get_floor=False):
+    """
+    Calculate the number of windows that would be produced with `sliding_window`.
+    Args:
+        len_data: number of data points in the time series.
+        window_size: window size.
+        step_size: step size.
+        get_floor: whether to return a floor int or float number of windows.
+
+    Returns:
+        number of windows.
+    """
+    num_windows = (len_data - window_size) / step_size + 1
+    if get_floor:
+        num_windows = int(num_windows)
+    return num_windows
+
+
 def sliding_window(data: np.ndarray, window_size: int, step_size: int, get_last: bool = False) -> np.ndarray:
     """
     Sliding window along the first axis of the input array.
@@ -13,19 +31,20 @@ def sliding_window(data: np.ndarray, window_size: int, step_size: int, get_last:
     Returns:
         array shape [num window, window length, ...]
     """
-    num_windows = (len(data) - window_size) / step_size + 1
+    num_windows = cal_num_windows(len_data=len(data), window_size=window_size, step_size=step_size, get_floor=False)
     if num_windows < 1:
         return np.empty([0, window_size, *data.shape[1:]], dtype=data.dtype)
+    num_windows_floor = int(num_windows)
 
     # if possible, run fast sliding window
     if window_size % step_size == 0:
-        result = np.empty([int(num_windows), window_size, *data.shape[1:]], dtype=data.dtype)
+        result = np.empty([num_windows_floor, window_size, *data.shape[1:]], dtype=data.dtype)
         div = int(window_size / step_size)
         for window_idx, data_idx in enumerate(range(0, window_size, step_size)):
             new_window_data = data[data_idx:data_idx + (len(data) - data_idx) // window_size * window_size].reshape(
                 [-1, window_size, *data.shape[1:]])
 
-            new_window_idx = list(range(window_idx, int(num_windows), div))
+            new_window_idx = list(range(window_idx, num_windows_floor, div))
             result[new_window_idx] = new_window_data
     # otherwise, run a regular loop
     else:
