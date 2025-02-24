@@ -1,22 +1,63 @@
 import numpy as np
+import pandas as pd
+import polars as pl
+from typing import Union
 
 
-def cal_num_windows(len_data: int, window_size: int, step_size: int, get_floor=False):
+def cal_num_windows(len_data: int, window_size: int, step_size: int, rounding: str = None):
     """
     Calculate the number of windows that would be produced with `sliding_window`.
     Args:
         len_data: number of data points in the time series.
         window_size: window size.
         step_size: step size.
-        get_floor: whether to return a floor int or float number of windows.
+        rounding: 'floor', 'ceil', or None.
 
     Returns:
         number of windows.
     """
     num_windows = (len_data - window_size) / step_size + 1
-    if get_floor:
+    if rounding == 'floor':
         num_windows = int(num_windows)
+    elif rounding == 'ceil':
+        num_windows = np.ceil(num_windows).astype(int)
+    elif rounding is not None:
+        raise ValueError(f'rounding must be "floor" or "ceil" or None, found {rounding}')
     return num_windows
+
+
+def get_one_window(data: Union[np.ndarray, pl.DataFrame, pd.DataFrame], window_idx: int, window_size: int,
+                   step_size: int, get_last=False) -> np.ndarray:
+    """
+    Get one window from data array.
+
+    Args:
+        data: data of shape [time, channel].
+        window_idx: window index.
+        window_size: window size.
+        step_size: step size.
+        get_last: whether to take the last rows as an addition window
+
+    Returns:
+        one window of shape [window size, channel].
+    """
+    start_idx = window_idx * step_size
+    end_idx = start_idx + window_size
+
+    if get_last:
+        if start_idx >= len(data):
+            raise IndexError(f'Window index [{start_idx}:{end_idx}] out of range for data len {len(data)}')
+        elif end_idx > len(data):
+            end_idx = len(data)
+            start_idx = end_idx - window_size
+    elif end_idx > len(data):
+        raise IndexError(f'Window index [{start_idx}:{end_idx}] out of range for data len {len(data)}')
+
+    if isinstance(data, pd.DataFrame):
+        window = data.iloc[start_idx:end_idx]
+    else:
+        window = data[start_idx:end_idx]
+    return window
 
 
 def sliding_window(data: np.ndarray, window_size: int, step_size: int, get_last: bool = False) -> np.ndarray:
@@ -26,12 +67,12 @@ def sliding_window(data: np.ndarray, window_size: int, step_size: int, get_last:
         data: array shape [data length, ...]
         window_size: window size (num rows)
         step_size: step size (num rows)
-        get_last: whether to take the last rows as an addition window if they are not already included
+        get_last: whether to take the last rows as an additional window if they are not already included
 
     Returns:
         array shape [num window, window length, ...]
     """
-    num_windows = cal_num_windows(len_data=len(data), window_size=window_size, step_size=step_size, get_floor=False)
+    num_windows = cal_num_windows(len_data=len(data), window_size=window_size, step_size=step_size)
     if num_windows < 1:
         return np.empty([0, window_size, *data.shape[1:]], dtype=data.dtype)
     num_windows_floor = int(num_windows)
@@ -107,7 +148,7 @@ def shifting_window(data: np.ndarray, window_size: int, max_num_windows: int, mi
 
 
 if __name__ == '__main__':
-    result = shifting_window(
+    test = shifting_window(
         data=np.arange(1000),
         window_size=10,
         max_num_windows=3,
@@ -116,5 +157,5 @@ if __name__ == '__main__':
         end_idx=5
     )
 
-    print(result.shape)
-    print(result)
+    print(test.shape)
+    print(test)
