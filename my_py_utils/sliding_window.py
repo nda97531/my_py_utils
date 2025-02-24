@@ -44,7 +44,8 @@ def find_window_idx(window_idx: int, window_size: int, step_size: int) -> tuple:
 
 
 def get_one_window(data: Union[np.ndarray, pl.DataFrame, pl.LazyFrame, pd.DataFrame],
-                   window_idx: int, window_size: int, step_size: int, get_last=False) -> np.ndarray:
+                   window_idx: int, window_size: int, step_size: int, get_last=False,
+                   data_length: int = None) -> np.ndarray:
     """
     Get one window from data array.
 
@@ -54,20 +55,26 @@ def get_one_window(data: Union[np.ndarray, pl.DataFrame, pl.LazyFrame, pd.DataFr
         window_size: window size.
         step_size: step size.
         get_last: whether to take the last rows as an addition window
+        data_length: length of data array, used if date is a LazyFrame.
 
     Returns:
         one window of shape [window size, channel].
     """
     start_idx, end_idx = find_window_idx(window_idx, window_size, step_size)
+    if data_length is None:
+        if isinstance(data, pl.LazyFrame):
+            data_length = data.select(pl.len()).collect().item()
+        else:
+            data_length = len(data)
 
     if get_last:
-        if start_idx >= len(data):
-            raise IndexError(f'Window index [{start_idx}:{end_idx}] out of range for data len {len(data)}')
-        elif end_idx > len(data):
-            end_idx = len(data)
+        if start_idx >= data_length:
+            raise IndexError(f'Window index [{start_idx}:{end_idx}] out of range for data len {data_length}')
+        elif end_idx > data_length:
+            end_idx = data_length
             start_idx = end_idx - window_size
-    elif end_idx > len(data):
-        raise IndexError(f'Window index [{start_idx}:{end_idx}] out of range for data len {len(data)}')
+    elif end_idx > data_length:
+        raise IndexError(f'Window index [{start_idx}:{end_idx}] out of range for data len {data_length}')
 
     if isinstance(data, pl.LazyFrame):
         window = data[start_idx:end_idx].collect()
