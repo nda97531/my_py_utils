@@ -43,8 +43,8 @@ def find_window_idx(window_idx: int, window_size: int, step_size: int) -> tuple:
     return start_idx, end_idx
 
 
-def get_one_window(data: Union[np.ndarray, pl.DataFrame, pd.DataFrame], window_idx: int, window_size: int,
-                   step_size: int, get_last=False) -> np.ndarray:
+def get_one_window(data: Union[np.ndarray, pl.DataFrame, pl.LazyFrame, pd.DataFrame],
+                   window_idx: int, window_size: int, step_size: int, get_last=False) -> np.ndarray:
     """
     Get one window from data array.
 
@@ -69,7 +69,9 @@ def get_one_window(data: Union[np.ndarray, pl.DataFrame, pd.DataFrame], window_i
     elif end_idx > len(data):
         raise IndexError(f'Window index [{start_idx}:{end_idx}] out of range for data len {len(data)}')
 
-    if isinstance(data, pd.DataFrame):
+    if isinstance(data, pl.LazyFrame):
+        window = data[start_idx:end_idx].collect()
+    elif isinstance(data, pd.DataFrame):
         window = data.iloc[start_idx:end_idx]
     else:
         window = data[start_idx:end_idx]
