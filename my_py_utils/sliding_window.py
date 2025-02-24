@@ -26,6 +26,23 @@ def cal_num_windows(len_data: int, window_size: int, step_size: int, rounding: s
     return num_windows
 
 
+def find_window_idx(window_idx: int, window_size: int, step_size: int) -> tuple:
+    """
+    Find start (inclusive) and end (exclusive) indices of a window.
+
+    Args:
+        window_idx: index of window.
+        window_size: window size.
+        step_size: step size.
+
+    Returns:
+        a tuple of start (inclusive) and end (exclusive) indices.
+    """
+    start_idx = window_idx * step_size
+    end_idx = start_idx + window_size
+    return start_idx, end_idx
+
+
 def get_one_window(data: Union[np.ndarray, pl.DataFrame, pd.DataFrame], window_idx: int, window_size: int,
                    step_size: int, get_last=False) -> np.ndarray:
     """
@@ -41,8 +58,7 @@ def get_one_window(data: Union[np.ndarray, pl.DataFrame, pd.DataFrame], window_i
     Returns:
         one window of shape [window size, channel].
     """
-    start_idx = window_idx * step_size
-    end_idx = start_idx + window_size
+    start_idx, end_idx = find_window_idx(window_idx, window_size, step_size)
 
     if get_last:
         if start_idx >= len(data):
