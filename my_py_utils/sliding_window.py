@@ -43,9 +43,7 @@ def find_window_idx(window_idx: int, window_size: int, step_size: int) -> tuple:
     return start_idx, end_idx
 
 
-def get_one_window(data: Union[np.ndarray, pl.DataFrame, pl.LazyFrame, pd.DataFrame],
-                   window_idx: int, window_size: int, step_size: int, get_last=False,
-                   data_length: int = None) -> np.ndarray:
+def get_one_window(data, window_idx: int, window_size: int, step_size: int, get_last=False, data_length: int = None):
     """
     Get one window from data array.
 
