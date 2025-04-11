@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 import polars as pl
-from typing import Union
 
 
 def cal_num_windows(len_data: int, window_size: int, step_size: int, rounding: str = None):
@@ -16,6 +15,11 @@ def cal_num_windows(len_data: int, window_size: int, step_size: int, rounding: s
     Returns:
         number of windows.
     """
+    if len_data <= 0:
+        return 0
+    if len_data < window_size:
+        return 1 if (rounding == 'ceil') else 0
+
     num_windows = (len_data - window_size) / step_size + 1
     if rounding == 'floor':
         num_windows = int(num_windows)
