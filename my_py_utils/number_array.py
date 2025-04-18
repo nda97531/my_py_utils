@@ -4,6 +4,7 @@ from typing import List, Union
 import bezier
 import numpy as np
 from scipy.interpolate import CubicSpline
+import bisect
 
 
 def interp_resample(arr: np.ndarray, old_freq: float, new_freq: float) -> np.ndarray:
@@ -243,3 +244,53 @@ def create_random_subsets(arr: Union[int, Iterable], max_num_subsets: int, max_r
         results_list = [arr[v].tolist() for v in results_list]
 
     return results_list
+
+
+def fill_nan_with_nearest(arr: np.ndarray, inplace=False) -> np.ndarray:
+    """
+    Fill NaNs in a 1D numpy array with the nearest non-NaN value based on index.
+
+    Args:
+        arr: 1D numpy array with NaNs.
+        inplace: whether modify the array inplace or out-of-place.
+
+    Returns:
+        A new array with NaNs filled.
+    """
+    assert len(arr.shape) == 1, 'Only 1d array is valid.'
+    if not inplace:
+        arr = arr.copy()
+
+    nan_mask = np.isnan(arr)
+    nan_idx = nan_mask.nonzero()[0]
+
+    # if there's no nan or all are nan
+    if (len(nan_idx) == 0) or (len(nan_idx) == len(arr)):
+        return arr
+
+    notnan_idx = (~nan_mask).nonzero()[0]
+    del nan_mask
+
+    # for each nan index
+    for nan_i in nan_idx:
+        # find the notnan index right after it
+        right_notnan_ii = bisect.bisect_left(notnan_idx, nan_i)
+
+        if right_notnan_ii == len(notnan_idx):
+            # if there's no not-nan value after this nan, fill the last not-nan value
+            nearest_i = notnan_idx[-1]
+        elif right_notnan_ii == 0:
+            # if there's no not-nan value before this nan, fill the first not-nan value
+            nearest_i = notnan_idx[0]
+        else:
+            # if there are not-nan values at both ends, find the closer one
+            left_notnan_ii = right_notnan_ii - 1
+            right_notnan_i = notnan_idx[right_notnan_ii]
+            left_notnan_i = notnan_idx[left_notnan_ii]
+            if abs(left_notnan_i - nan_i) < abs(right_notnan_i - nan_i):
+                nearest_i = left_notnan_i
+            else:
+                nearest_i = right_notnan_i
+        arr[nan_i] = arr[nearest_i]
+
+    return arr
