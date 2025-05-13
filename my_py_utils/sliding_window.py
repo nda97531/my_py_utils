@@ -174,6 +174,41 @@ def shifting_window(data: np.ndarray, window_size: int, max_num_windows: int, mi
     return windows
 
 
+def rough_sliding_windows(arr, window_size) -> list:
+    """
+    Divide an array into roughly equal windows.
+
+    Args:
+        arr (list/array): The input array
+        window_size (int): The target size for each window
+
+    Returns:
+        list: A list of sub-arrays (windows)
+    """
+    assert window_size > 0, 'Window size must be positive'
+    if not len(arr):
+        return []
+    if window_size >= len(arr):
+        return [arr.copy()]
+
+    # Calculate the number of windows needed
+    num_windows = max(1, round(len(arr) / window_size))
+
+    # Calculate the actual window size (might be slightly different from requested)
+    actual_window_size = len(arr) / num_windows
+
+    windows = []
+    for i in range(num_windows):
+        # Calculate start and end indices for this window
+        start_idx = int(i * actual_window_size)
+        # For the last window, ensure we include all remaining elements
+        end_idx = int((i + 1) * actual_window_size) if i < num_windows - 1 else len(arr)
+
+        windows.append(arr[start_idx:end_idx])
+
+    return windows
+
+
 if __name__ == '__main__':
     test = shifting_window(
         data=np.arange(1000),
