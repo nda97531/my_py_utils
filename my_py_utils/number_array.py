@@ -7,6 +7,27 @@ from scipy.interpolate import CubicSpline
 import bisect
 
 
+def is_sorted(arr: np.ndarray, ascending=True) -> bool:
+    """
+    Check if 1D array is sorted.
+
+    Args:
+        arr: 1D array
+        ascending: ascending or descending
+
+    Returns:
+        boolean value
+    """
+    if not isinstance(arr, np.ndarray):
+        arr = np.array(arr)
+    assert arr.ndim == 1, 'Only accept 1D array.'
+
+    if ascending:
+        return np.all(arr[:-1] <= arr[1:])
+    else:
+        return np.all(arr[:-1] >= arr[1:])
+
+
 def interp_resample(arr: np.ndarray, old_freq: float, new_freq: float) -> np.ndarray:
     """
     Resample by linear interpolation for every channel in the data array.
